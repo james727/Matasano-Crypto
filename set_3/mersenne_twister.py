@@ -1,6 +1,3 @@
-import numpy as np
-import math
-
 class mersenne_rng(object):
     def __init__(self, seed = 5489):
         self.state = [0]*624
