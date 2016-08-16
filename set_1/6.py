@@ -66,7 +66,6 @@ def decode_string(s):
     min_score = 99999999999999999999999
     min_string = ""
     min_key = ""
-    #for i in range(65,91)+range(97,123):
     for i in range(1,255):
         n = "".join(map(lambda x: chr(ord(x)^i), s))
         if evaluate_string(n) < min_score:
@@ -118,6 +117,7 @@ def main():
     print repeating_encrypt(s, min_key)
     print
     print min_key
+    print potential_key_lengths
 
 
 main()
