@@ -83,6 +83,7 @@ class Sha1Hash(object):
         self._unprocessed = b''
         # Length in bytes of all data that has been processed so far
         self._message_byte_length = 0
+        self.message = ''
 
     def update(self, arg):
         """Update the current digest.
@@ -118,26 +119,26 @@ class Sha1Hash(object):
     def _produce_digest(self):
         """Return finalized digest variables for the data processed so far."""
         # Pre-processing:
-        message = self._unprocessed
-        message_byte_length = self._message_byte_length + len(message)
+        self.message = self._unprocessed
+        message_byte_length = self._message_byte_length + len(self.message)
 
         # append the bit '1' to the message
-        message += b'\x80'
+        self.message += b'\x80'
 
         # append 0 <= k < 512 bits '0', so that the resulting message length (in bytes)
         # is congruent to 56 (mod 64)
-        message += b'\x00' * ((56 - (message_byte_length + 1) % 64) % 64)
+        self.message += b'\x00' * ((56 - (message_byte_length + 1) % 64) % 64)
 
         # append length of message (before pre-processing), in bits, as 64-bit big-endian integer
         message_bit_length = message_byte_length * 8
-        message += struct.pack(b'>Q', message_bit_length)
+        self.message += struct.pack(b'>Q', message_bit_length)
 
         # Process the final chunk
         # At this point, the length of the message is either 64 or 128 bytes.
-        h = _process_chunk(message[:64], *self._h)
-        if len(message) == 64:
+        h = _process_chunk(self.message[:64], *self._h)
+        if len(self.message) == 64:
             return h
-        return _process_chunk(message[64:], *h)
+        return _process_chunk(self.message[64:], *h)
 
 
 def sha1(data):
@@ -187,5 +188,3 @@ if __name__ == '__main__':
 
     # Show the final digest
     print('sha1-digest:', sha1(data))
-Contact GitHub API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Status Help
