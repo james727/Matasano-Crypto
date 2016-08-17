@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import print_function
 import struct
 import io
@@ -18,7 +16,7 @@ def _process_chunk(chunk, h0, h1, h2, h3, h4):
     assert len(chunk) == 64
 
     w = [0] * 80
-
+    print(chunk)
     # Break chunk into sixteen 4-byte big-endian words w[i]
     for i in range(16):
         w[i] = struct.unpack(b'>I', chunk[i*4:i*4 + 4])[0]
@@ -96,7 +94,8 @@ class Sha1Hash(object):
             arg = io.BytesIO(arg)
 
         # Try to build a chunk out of the unprocessed data, if any
-        chunk = self._unprocessed + arg.read(64 - len(self._unprocessed))
+        #chunk = self._unprocessed + arg.read(64 - len(self._unprocessed))
+        chunk = arg.read(64)
 
         # Read the rest of the data, 64 bytes at a time
         while len(chunk) == 64:
@@ -135,10 +134,13 @@ class Sha1Hash(object):
 
         # Process the final chunk
         # At this point, the length of the message is either 64 or 128 bytes.
-        h = _process_chunk(self.message[:64], *self._h)
+        #h = _process_chunk(self.message[:64], *self._h)
+        self._h = _process_chunk(self.message[:64], *self._h)
         if len(self.message) == 64:
-            return h
-        return _process_chunk(self.message[64:], *h)
+            #return h
+            return self._h
+        return _process_chunk(self.message[64:], *self.h)
+        #return _process_chunk(self.message[64:], *h)
 
 
 def sha1(data):

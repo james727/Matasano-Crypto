@@ -17,7 +17,7 @@ def bitwise_xor(s1,s2):
 
 def random_ciphertext():
     seed = random.randint(0,2**16-1)
-    print "The random not-so-secret seed: "+str(seed)
+    print "The random not-so-secret seed: "+str(seed    )
     plaintext = os.urandom(random.randint(1,20))+14*"a"
     ciphertext = mersenne_stream(plaintext, seed)
     return ciphertext
