@@ -1,24 +1,8 @@
 import sha1_2
 from os import urandom
 
-def sha_hash(ct, key):
-    h = sha1.Sha1Hash()
-    h.update(key+ct)
-    return h.hexdigest()
-
 def get_registers(hexdigest):
     return [hexdigest[8*i:8*(i+1)] for i in range(5)]
-
-
-def get_int(chars):
-    b = ''.join([bin(ord(x))[2:].zfill(8) for x in chars])
-    return int(b, 2)
-
-def sha_padding(ct, key):
-    h = sha1.Sha1Hash()
-    h.update(key+ct)
-    d = h.digest()
-    return h.message
 
 def md_padding(message):
     num_bits = 8*len(message)
@@ -47,17 +31,6 @@ def hex_escape_64(n):
         n = b[8*i:8*(i+1)]
         o+=chr(int(n,2))
     return o
-
-def test_padding():
-    sha = sha1.Sha1Hash()
-    message = "I am a god, plain and simple."
-    key = urandom(16)
-    my_padding = md_padding(key + message)
-    test_padding = sha_padding(message, key)
-    print len(my_padding)
-    print len(test_padding)
-    for i in range(len(my_padding)):
-        print ord(my_padding[i]), ord(test_padding[i])
 
 def set_registers_and_get_digest(hex_registers, new_text):
     int_regs = [int(x, 16) for x in hex_registers]
