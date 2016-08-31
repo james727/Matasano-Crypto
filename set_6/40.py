@@ -1,5 +1,6 @@
 import gensafeprime
 import math
+import random
 
 def invmod(e, n):
     # get the multiplicative inverse of e modulo n
@@ -73,36 +74,38 @@ def n_root(k, n):
 
     return guess if n_power(guess) == k else upper
 
+class decryption_oracle(object):
+    def __init__(self):
+        self.p = gensafeprime.generate(300) #300 bit primes
+        self.q = gensafeprime.generate(300)
+        self.n = self.p*self.q
+        self.e, self.d = generate_key_pair(self.p, self.q)
+        self.texts = ["I like cheese",
+                      "I like cryptography",
+                      "I'm not very good at this",
+                      "hmmmmmmmm",
+                      "Do your worst!",
+                      "I bet you can't decrypt this"]
 
-def e_3_broadcast(ciphertexts, public_keys):
-    p0 = public_keys[1]*public_keys[2]
-    p1 = public_keys[0]*public_keys[2]
-    p2 = public_keys[0]*public_keys[1]
+    def get_public_keys(self):
+        return self.e, self.n
 
-    N = public_keys[0]*public_keys[1]*public_keys[2]
+    def get_ciphertext(self):
+        return rsa_encrypt(random.choice(self.texts), self.e, self.n)
 
-    x0 = ciphertexts[0]*p0*invmod(p0, public_keys[0])
-    x1 = ciphertexts[1]*p1*invmod(p1, public_keys[1])
-    x2 = ciphertexts[2]*p2*invmod(p2, public_keys[2])
-    x = (x0 + x1 + x2) % N
-    p = n_root(x, 3)
-
-    return int_to_message(p)
-
+    def decrypt_ciphertext(self, c):
+        return modExp(c, self.d, self.n)
 
 def main():
-    m = "Hi I'm encrypting this 3 times hopefully it goes ok!"
-    ct = []
-    pk = []
-    for i in range(3):
-        p = gensafeprime.generate(300) #300 bit primes
-        q = gensafeprime.generate(300)
-        n = p*q
-        e,d = generate_key_pair(p, q)
-        c = rsa_encrypt(m, e, n)
-        ct.append(c)
-        pk.append(n)
-    print e_3_broadcast(ct, pk)
+    oracle = decryption_oracle()
+    e, n = oracle.get_public_keys()
+    c = oracle.get_ciphertext()
+    s = random.randint(1,n**(1.0/10))
+    cp = (modExp(s, e, n) * c) % n
+    pp = oracle.decrypt_ciphertext(cp)
+    i = invmod(s,n)
+    print int_to_message((pp*i)%n)
+
 
 if __name__ == "__main__":
     main()
