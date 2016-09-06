@@ -1,14 +1,6 @@
 import gensafeprime
 import math
 import random
-import sha1
-import sys
-import os
-
-def sha1_hexdigest(txt):
-    sha = sha1.SHA1()
-    sha.update(txt)
-    return sha.hexdigest()
 
 def invmod(e, n):
     # get the multiplicative inverse of e modulo n
@@ -59,11 +51,8 @@ def message_to_int(m):
 def int_to_message(i):
     hexmsg = hex(i)[2:]
     if hexmsg[-1] != 'L':
-        hexmsg = hex(i)[2:]
-    else:
-        hexmsg = hex(i)[2:-1]
-    hexmsg = "0"*3 + hexmsg #re-padding because of hex decoding problems.. leading zeroes get erased
-    return hexmsg.decode('hex')
+        return hex(i)[2:].decode('hex')
+    return hex(i)[2:-1].decode('hex')
 
 def n_root(k, n):
     # solve for the nth root of k using binary search...
@@ -83,55 +72,40 @@ def n_root(k, n):
         guess = (lower+upper)/2
         e = n_power(guess)
 
-    return guess if n_power(guess) == k else lower
+    return guess if n_power(guess) == k else upper
 
-class rsa_sig_validator(object):
+class decryption_oracle(object):
     def __init__(self):
-        self.p = gensafeprime.generate(512) #512 bit primes for speed/recursion depth
-        self.q = gensafeprime.generate(512)
+        self.p = gensafeprime.generate(300) #300 bit primes
+        self.q = gensafeprime.generate(300)
         self.n = self.p*self.q
         self.e, self.d = generate_key_pair(self.p, self.q)
-        self.plaintext = "hi mom"
+        self.texts = ["I like cheese",
+                      "I like cryptography",
+                      "I'm not very good at this",
+                      "hmmmmmmmm",
+                      "Do your worst!",
+                      "I bet you can't decrypt this"]
 
     def get_public_keys(self):
-        return self.d, self.n
+        return self.e, self.n
 
-    def validate_ciphertext(self, c):
-        plaintext = rsa_decrypt(c, self.e, self.n)
-        message = self.remove_padding(plaintext)
-        return message == sha1_hexdigest(self.plaintext)
+    def get_ciphertext(self):
+        return rsa_encrypt(random.choice(self.texts), self.e, self.n)
 
-    def remove_padding(self, m):
-        m = m[2:]
-        index = m.index(chr(0))
-        hash_length = 40
-        return m[index+1:index+40+1]
-
-def pad_plaintext(txt_hash):
-    num_bits = 1024
-    num_bytes = num_bits/8
-    prefix = chr(0) + chr(1)
-    postfix = chr(0)
-    message_len = len(prefix) + len(postfix) + len(txt_hash)
-    padding_needed = num_bytes - message_len
-    padding = chr(255)*padding_needed
-    return prefix + padding + postfix + txt_hash
-
-def get_forged_ciphertext(text):
-    h = sha1_hexdigest(text)
-    garbage_length = 85 #need enough garbage that the cube root approximation leaves the message intact
-    padded_txt = pad_plaintext(h+os.urandom(garbage_length))
-    cube_root = n_root(message_to_int(padded_txt), 3)
-    return cube_root
-
+    def decrypt_ciphertext(self, c):
+        return modExp(c, self.d, self.n)
 
 def main():
-    sys.setrecursionlimit(2000)
-    R = rsa_sig_validator()
-    d, n = R.get_public_keys()
-    txt = "hi mom"
-    forged_text = get_forged_ciphertext(txt)
-    print R.validate_ciphertext(forged_text)
+    oracle = decryption_oracle()
+    e, n = oracle.get_public_keys()
+    c = oracle.get_ciphertext()
+    s = random.randint(1,n**(1.0/10))
+    cp = (modExp(s, e, n) * c) % n
+    pp = oracle.decrypt_ciphertext(cp)
+    i = invmod(s,n)
+    print int_to_message((pp*i)%n)
+
 
 if __name__ == "__main__":
     main()
