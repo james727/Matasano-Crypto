@@ -3,6 +3,11 @@ import sys
 from os import urandom
 import math
 
+# Cryptopals set 7 challenge 8
+# Note to people who run this script - the first part of the decryption algorithm is SLOW. It will take a few minutes to run.
+# Once we get to the logarithmic search, I print out the width of the message interval for your pleasure.
+
+
 def invmod(e, n):
     # get the multiplicative inverse of e modulo n
     _, d, _ = extended_euler(e,n)
@@ -96,11 +101,14 @@ def padding_oracle_decrypt(oracle, c, e, n):
     upper = 3*B - 1
     M = [(lower, upper)]
     s = get_first_s(oracle, c, e, n, B)
+    print "Got first s"
     while True:
         s = get_next_s(oracle, s, B, c, e, n, M)
         M = update_m(B, n, s, M)
+        print "Got new M with {} intervals".format(len(M))
         if len(M) == 1:
             a, b = M[0]
+            print "Only 1 interval of width " + str(b-a)
             if b - a == 0:
                 m = ("0x%0*x"%(num_bits/4, a))[2:]
                 return m.decode('hex')
@@ -139,7 +147,7 @@ def merge_intervals(M):
     return new_M
 
 def get_first_s(oracle, c0, e, n, B):
-    s = n/(3*B) + 1
+    s = n//(3*B)
     c = (c0 * modExp(s, e, n)) % n
     while not oracle.check_padding(c):
         s += 1
@@ -176,11 +184,13 @@ def get_next_s(oracle, s_old, B, c, e, n, M):
 
 def main():
     sys.setrecursionlimit(4000)
-    P = RSA_padding_oracle(128)
+    print "Generating key pair..."
+    P = RSA_padding_oracle(768)
     e, n = P.get_public_keys()
     m = "Kick it!!!"
     mp = P.pad_plaintext(m)
     c = rsa_encrypt(mp, e, n)
+    print "Decrypting..."
     print padding_oracle_decrypt(P, c, e, n)
 
 if __name__ == "__main__":
