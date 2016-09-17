@@ -109,4 +109,3 @@ def check_characters():
 
 if __name__ == "__main__":
     check_characters()
-    #get_base64_combos()
