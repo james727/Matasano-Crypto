@@ -4,6 +4,14 @@ from os import urandom, system, name
 import random
 from struct import pack, unpack
 
+# Hello reader! When I ran this it took approximately 3 minutes to generate
+# a collision, and generated the following messages (hex encoded):
+#
+# m1 = 15a21fd5d7a4abacc3bf69d747f9b1817473b272d9f83dc8c9295179f595a5b733e4f82b6a2664f3092e5c340b2cc4682bc5615fc2b756634b44cce91fbe36b8
+# m2 = 15a21fd5d7a4ab2cc3bf694747f9b1817473b272d9f83dc8c9295179f595a5b733e4f82b6a2664f3092e5c340b2cc4682bc5605fc2b756634b44cce91fbe36b8
+#
+# To verify this, please feel free to run the method "test_final_collisions"
+
 BLOCK_SIZE = 64
 
 def first_round_modifications(m):
@@ -54,9 +62,9 @@ def tweak_bits_2(m):
 
 def tweak_bits(m):
     nums = [unpack("<I", m[4*i:4*(i+1)])[0] for i in range(16)]
-    nums[1] = nums[1]^(1<<31)
-    nums[2] = nums[2]^(1<<31)^(1<<28)
-    nums[12] = nums[12]^(1<<16)
+    nums[1] = nums[1]^(1<<30)
+    nums[2] = nums[2]^(1<<30)^(1<<27)
+    nums[12] = nums[12]^(1<<15)
     m = ""
     for num in nums:
         m += pack("<I", num)
@@ -164,6 +172,8 @@ def test_second_round_integration():
 
     conditions1 = wangs_conditions.first_round_conditions()
     conditions2 = wangs_conditions.second_round_conditions()
+    print len(conditions1)
+    print len(conditions2)
 
     test_message_conditions(m2, conditions1)
     test_message_conditions(m2, conditions2)
@@ -174,10 +184,6 @@ def test_message_conditions(m, c):
     for i, cond in enumerate(c):
         if not cond.condition_fulfilled(state):
             print cond.state_variable, cond.index, cond.bit
-            print cond.target_state_variable, cond.target_index, cond.target_bit
-            """print "Target value is " + str(ith_bit(state["d"][5], 26))
-            print "Target bit:      "+bin(2**33 + 2**(cond.bit-1))[2:]
-            print "Current c value: "+bin(2**33 + state["c"][5])[2:]"""
         cond.assert_condition_fulfilled(state)
 
 def test_bit_flipping():
@@ -190,7 +196,6 @@ def test_bit_flipping():
 
     return
 
-
 def test():
     test_ith_bit()
     test_update_for_equality()
@@ -202,6 +207,12 @@ def test():
     test_second_round_integration()
     test_bit_flipping()
 
+def test_final_collisions():
+    m1 = "15a21fd5d7a4abacc3bf69d747f9b1817473b272d9f83dc8c9295179f595a5b733e4f82b6a2664f3092e5c340b2cc4682bc5615fc2b756634b44cce91fbe36b8".decode('hex')
+    m2 = "15a21fd5d7a4ab2cc3bf694747f9b1817473b272d9f83dc8c9295179f595a5b733e4f82b6a2664f3092e5c340b2cc4682bc5605fc2b756634b44cce91fbe36b8".decode('hex')
+    assert m1 != m2
+    assert md4_hash(m1) == md4_hash(m2)
+
 def main():
     m0, m1, m2 = get_collision()
     print m0.encode('hex')
@@ -211,5 +222,4 @@ def main():
     assert m1 != m2
 
 if __name__ == "__main__":
-    test_second_round_integration()
-    #main()
+    main()

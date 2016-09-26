@@ -237,7 +237,7 @@ def second_round_conditions():
     d53 = conditional_equality("d", 5, 27, "b", 4, 27)
     d54 = conditional_equality("d", 5, 29, "b", 4, 29)
     d55 = conditional_equality("d", 5, 32, "b", 4, 32)
-    #conditions += [d51, d52, d53, d54, d55]
+    conditions += [d51, d52, d53, d54, d55]
 
     # c5
     c51 = conditional_equality("c", 5, 26, "d", 5, 26)
@@ -245,7 +245,7 @@ def second_round_conditions():
     c53 = conditional_equality("c", 5, 29, "d", 5, 29)
     c54 = conditional_equality("c", 5, 30, "d", 5, 30)
     c55 = conditional_equality("c", 5, 32, "d", 5, 32)
-    conditions += [c51]
+    #conditions += [c51]
     #conditions += [c51, c52, c53, c54, c55]
 
     # b5

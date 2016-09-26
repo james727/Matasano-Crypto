@@ -75,9 +75,9 @@ class md4_state(object):
                 pass
             else:
                 if condition.state_variable == "a" and condition.index == 5:
-                    self.update_m_for_r21(condition)
+                    self.update_m_for_r211(condition)
                 elif condition.state_variable == "d" and condition.index == 5:
-                    self.update_m_for_r22(condition)
+                    self.update_m_for_r221(condition)
                 elif condition.state_variable == "c" and condition.index == 5:
                     self.update_m_for_r23(condition)
 
@@ -133,41 +133,35 @@ class md4_state(object):
     def m_to_words(self, m):
          return [unpack("<I", m[4*i:4*(i+1)])[0] for i in range(16)]
 
-    def update_m_for_r21(self, condition):
-        # updates m for round 2 first collisions (a5,i)
+    def update_m_for_r211(self, condition):
         words = self.m_to_words(self.msg)
+        bit = condition.bit
 
-        word_index = 0
-        word = words[word_index]
-        state_num = self.state["a"][5]
-        target_bit = condition.bit
-
-        if isinstance(condition, conditional_value):
-            target_value = condition.target_value
-        elif isinstance(condition, conditional_equality):
-            target_num = self.state[condition.target_state_variable][condition.target_index]
-            target_value = ith_bit(target_num, condition.target_bit)
-
-        current_bit_val = ith_bit(state_num, target_bit)
+        # update a1
         a1 = self.state["a"][1]
+        current_val = ith_bit(a1, bit)
+        target_val = flip_bit(current_val)
+        a1 = update_for_equality(a1, bit, target_val)
+        self.state["a"][1] = a1
 
-        if current_bit_val == 1 and target_value == 0:
-            new_word = (word - 2**(target_bit - 4))&0xffffffff
-            new_a1 = (a1 - 2**(target_bit-1)) & 0xffffffff
-
-        if current_bit_val == 0 and target_value == 1:
-            new_word = rot_add(word, 2**(target_bit - 4))
-            new_a1 = rot_add(a1, 2**(target_bit-1))
-
-        words[word_index] = new_word
-        msg = self.words_to_m(words)
-        self.msg = msg
-        new_states = md4_states(msg)
-
-        #assert new_states["a"][1] == new_a1
-
-        self.state["a"][1] = new_a1
+        #self.msg = self.words_to_m(words)
         self.msg = self.derive_m_from_state()
+        self.state = md4_states(self.msg)
+
+    def update_m_for_r221(self, condition):
+        words = self.m_to_words(self.msg)
+        bit = condition.bit - 2
+
+        # update a2
+        a2 = self.state["a"][2]
+        current_val = ith_bit(a2, bit)
+        target_val = flip_bit(current_val)
+        a2 = update_for_equality(a2, bit, target_val)
+        self.state["a"][2] = a2
+
+        #self.msg = self.words_to_m(words)
+        self.msg = self.derive_m_from_state()
+        self.state = md4_states(self.msg)
 
     def update_m_for_r22(self, condition):
         # updates m for round 2 second collisions (d5,i)
