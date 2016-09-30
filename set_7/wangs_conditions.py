@@ -239,6 +239,8 @@ def second_round_conditions():
     d55 = conditional_equality("d", 5, 32, "b", 4, 32)
     conditions += [d51, d52, d53, d54, d55]
 
+    # The code to handle the below conditions isn't built yet.
+
     # c5
     c51 = conditional_equality("c", 5, 26, "d", 5, 26)
     c52 = conditional_equality("c", 5, 27, "d", 5, 27)
